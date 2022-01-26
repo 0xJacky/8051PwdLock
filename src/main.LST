@@ -1,0 +1,352 @@
+C51 COMPILER V9.00   MAIN                                                                  12/14/2021 15:45:15 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE main.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include <stdio.h>
+   2          #include <intrins.h>
+   3          #include <STRING.H>
+   4          #include "uart.h"
+   5          #include "type.h"
+   6          #include "keyscan.h"
+   7          #include "lcd.h"
+   8          #include "msg.h"
+   9          
+  10          uchar key_Value = 0xff;
+  11          bool Key_process();
+  12          
+  13          char adminPwd[] = "1234";
+  14          
+  15          #define PwdLength 4
+  16          char userPwd[PwdLength + 1] = {'\0'};
+  17          char userInput[PwdLength + 1] = {'\0'};
+  18          char reUserInput[PwdLength + 1] = {'\0'};
+  19          uchar len = 0;
+  20          
+  21          sbit LEDGREEN = P2 ^ 0;
+  22          sbit LEDRED = P2 ^ 1;
+  23          
+  24          void MyLcdInit()
+  25          {
+  26   1          LcdReset();
+  27   1          Putstr(0, 0, hello);
+  28   1          LocateXY(0, 1);
+  29   1      }
+  30          
+  31          void press(int r, int c, char *s)
+  32          {
+  33   1          printf("[press] Key(R%d,C%d) is pressed, value is %s\n", r, c, s);
+  34   1      }
+  35          
+  36          void logInput()
+  37          {
+  38   1          if (len == 1)
+  39   1          {
+  40   2              MyLcdInit();
+  41   2          }
+  42   1          PutDataStr(0, 1, userInput);
+  43   1          printf("[logInput] Now userInput buffer is: %s\n", userInput);
+  44   1      }
+  45          
+  46          void number(char n)
+  47          {
+  48   1          if (len < PwdLength)
+  49   1          {
+  50   2              userInput[len++] = n + '0';
+  51   2          }
+  52   1          else
+  53   1          {
+  54   2              printf("[number] userInput buffer is full!\n");
+  55   2          }
+C51 COMPILER V9.00   MAIN                                                                  12/14/2021 15:45:15 PAGE 2   
+
+  56   1          userInput[len] = '\0';
+  57   1      
+  58   1          logInput();
+  59   1      }
+  60          
+  61          void back(void)
+  62          {
+  63   1          // 1, 2, 3, 4, \0
+  64   1          // 0, 1, 2, 3, 4
+  65   1          if (len > 0)
+  66   1          {
+  67   2              len--;
+  68   2          }
+  69   1          userInput[len] = '\0';
+  70   1          LcdReset();
+  71   1          Putstr(0, 0, hello);
+  72   1          logInput();
+  73   1      }
+  74          
+  75          void enter(void)
+  76          {
+  77   1          logInput();
+  78   1      }
+  79          
+  80          void getInput()
+  81          {
+  82   1          bool flag = TRUE;
+  83   1          bool clear = TRUE;
+  84   1          do
+  85   1          {
+  86   2              if (key_Value != 0xff)
+  87   2              {
+  88   3                  flag = Key_process();
+  89   3                  key_Value = 0xff;
+  90   3              }
+  91   2          } while (flag);
+  92   1          printf("[getInput] Get input: %s\n", userInput);
+  93   1      }
+  94          
+  95          void clearInput()
+  96          {
+  97   1          len = 0;
+  98   1          userInput[len] = '\0';
+  99   1      }
+ 100          
+ 101          bool setPwd(void)
+ 102          {
+ 103   1          printf("[setPwd] Start!\n");
+ 104   1          MyLcdInit();
+ 105   1          Putstr(0, 1, setYourPwd);
+ 106   1      
+ 107   1          clearInput();
+ 108   1          getInput();
+ 109   1          strcpy(reUserInput, userInput);
+ 110   1      
+ 111   1          MyLcdInit();
+ 112   1          Putstr(0, 1, enterAgain);
+ 113   1      
+ 114   1          clearInput();
+ 115   1          getInput();
+ 116   1      
+ 117   1          if (strcmp(reUserInput, userInput) == 0)
+C51 COMPILER V9.00   MAIN                                                                  12/14/2021 15:45:15 PAGE 3   
+
+ 118   1          {
+ 119   2      
+ 120   2              if (len != 4)
+ 121   2              {
+ 122   3                  MyLcdInit();
+ 123   3                  Putstr(0, 1, pwdTooShort);
+ 124   3                  printf("[setPwd] Passowrd length not enough!\n");
+ 125   3                  time(3000);
+ 126   3      
+ 127   3                  return FALSE;
+ 128   3              }
+ 129   2      
+ 130   2              if (strcmp(userInput, adminPwd) == 0)
+ 131   2              {
+ 132   3                  MyLcdInit();
+ 133   3                  Putstr(0, 1, pwdCannotUse);
+ 134   3                  printf("[setPwd] Can not use admin pwd as user pwd!\n");
+ 135   3                  time(3000);
+ 136   3      
+ 137   3                  return FALSE;
+ 138   3              }
+ 139   2      
+ 140   2              strcpy(userPwd, userInput);
+ 141   2              printf("[setPwd] password set ok, is: %s\n", userPwd);
+ 142   2              clearInput();
+ 143   2              return TRUE;
+ 144   2          }
+ 145   1          MyLcdInit();
+ 146   1          Putstr(0, 1, pwdSetFail);
+ 147   1          printf("[setPwd] Two times inputs are not equal.\n");
+ 148   1          time(2000);
+ 149   1          clearInput();
+ 150   1          return FALSE;
+ 151   1      }
+ 152          
+ 153          void main(void)
+ 154          {
+ 155   1          initUart();
+ 156   1          printf("Hello World!\n");
+ 157   1          printf("YuZhenxi-201904020209\n");
+ 158   1      
+ 159   1          TMOD = 0x10;
+ 160   1          TH1 = -10000 >> 8;
+ 161   1          TL1 = -10000 % 256;
+ 162   1          TCON = 0x40;
+ 163   1          IE = 0x88;
+ 164   1          key_Value = 0xff;
+ 165   1      
+ 166   1          LEDGREEN = 0;
+ 167   1          LEDRED = 1;
+ 168   1          time(1000);
+ 169   1          LEDGREEN = 1;
+ 170   1          LEDRED = 0;
+ 171   1          time(1000);
+ 172   1          LEDGREEN = 0;
+ 173   1          LEDRED = 1;
+ 174   1      
+ 175   1          MyLcdInit();
+ 176   1      
+ 177   1          printf("[main] Init Complate!\n");
+ 178   1      
+ 179   1          while (TRUE)
+C51 COMPILER V9.00   MAIN                                                                  12/14/2021 15:45:15 PAGE 4   
+
+ 180   1          {
+ 181   2              if (setPwd())
+ 182   2                  break;
+ 183   2          }
+ 184   1          MyLcdInit();
+ 185   1          Putstr(0, 1, pwdSetOk);
+ 186   1          printf("[main] Password set ok!\n");
+ 187   1          time(3000);
+ 188   1          Putstr(0, 1, please);
+ 189   1          while (TRUE)
+ 190   1          {
+ 191   2              MyLcdInit();
+ 192   2              Putstr(0, 1, please);
+ 193   2      
+ 194   2              getInput();
+ 195   2              if (strcmp(userPwd, userInput) == 0)
+ 196   2              {
+ 197   3                  LEDGREEN = 1;
+ 198   3                  MyLcdInit();
+ 199   3                  Putstr(0, 1, ok);
+ 200   3                  printf("[main] Password right!\n");
+ 201   3                  time(3000);
+ 202   3                  LEDGREEN = 0;
+ 203   3              }
+ 204   2              else if (strcmp(adminPwd, userInput) == 0)
+ 205   2              {
+ 206   3                  printf("[main] Admin Mode, you can set new password!\n");
+ 207   3                  MyLcdInit();
+ 208   3                  Putstr(0, 1, adminMode);
+ 209   3                  time(2000);
+ 210   3                  MyLcdInit();
+ 211   3                  Putstr(0, 1, setYourPwd);
+ 212   3      
+ 213   3                  if (setPwd())
+ 214   3                  {
+ 215   4                      MyLcdInit();
+ 216   4                      Putstr(0, 1, pwdSetOk);
+ 217   4                      printf("[main] Password set ok!\n");
+ 218   4                      time(2000);
+ 219   4                      MyLcdInit();
+ 220   4                  }
+ 221   3                  else
+ 222   3                  {
+ 223   4                      MyLcdInit();
+ 224   4                      Putstr(0, 1, pwdSetFail);
+ 225   4                      printf("[main] Password set fail, back to user mode!\n");
+ 226   4                      time(2000);
+ 227   4                      MyLcdInit();
+ 228   4                  }
+ 229   3              }
+ 230   2              else
+ 231   2              {
+ 232   3      
+ 233   3                  printf("[main] Password wrong!\n");
+ 234   3                  MyLcdInit();
+ 235   3                  Putstr(0, 1, fail);
+ 236   3      
+ 237   3                  LEDRED = 0;
+ 238   3                  time(3000);
+ 239   3                  LEDRED = 1;
+ 240   3      
+ 241   3                  MyLcdInit();
+C51 COMPILER V9.00   MAIN                                                                  12/14/2021 15:45:15 PAGE 5   
+
+ 242   3              }
+ 243   2              clearInput();
+ 244   2          }
+ 245   1      }
+ 246          
+ 247          void timer1int(void) interrupt 3
+ 248          {
+ 249   1          EA = 0;
+ 250   1          TR1 = 0;
+ 251   1          TH1 = -10000 >> 8;
+ 252   1          TL1 = -10000 % 256;
+ 253   1          TR1 = 1;
+ 254   1          key_Value = keyscan();
+ 255   1          EA = 1;
+ 256   1      }
+ 257          
+ 258          bool Key_process()
+ 259          {
+ 260   1          bool flag = TRUE;
+ 261   1          switch (key_Value)
+ 262   1          {
+ 263   2          case 0x11:
+ 264   2              press(1, 1, "1");
+ 265   2              number(1);
+ 266   2              break;
+ 267   2          case 0x21:
+ 268   2              press(1, 2, "2");
+ 269   2              number(2);
+ 270   2              break;
+ 271   2          case 0x41:
+ 272   2              press(1, 3, "3");
+ 273   2              number(3);
+ 274   2              break;
+ 275   2      
+ 276   2          // 2
+ 277   2          case 0x12:
+ 278   2              press(2, 1, "4");
+ 279   2              number(4);
+ 280   2              break;
+ 281   2          case 0x22:
+ 282   2              press(2, 2, "5");
+ 283   2              number(5);
+ 284   2              break;
+ 285   2          case 0x42:
+ 286   2              press(2, 3, "6");
+ 287   2              number(6);
+ 288   2              break;
+ 289   2      
+ 290   2          // 3
+ 291   2          case 0x14:
+ 292   2              press(3, 1, "7");
+ 293   2              number(7);
+ 294   2              break;
+ 295   2          case 0x24:
+ 296   2              press(3, 2, "8");
+ 297   2              number(8);
+ 298   2              break;
+ 299   2          case 0x44:
+ 300   2              press(3, 3, "9");
+ 301   2              number(9);
+ 302   2              break;
+ 303   2      
+C51 COMPILER V9.00   MAIN                                                                  12/14/2021 15:45:15 PAGE 6   
+
+ 304   2          // 4
+ 305   2          case 0x18:
+ 306   2              press(4, 1, "Back");
+ 307   2              back();
+ 308   2              break;
+ 309   2          case 0x28:
+ 310   2              press(4, 2, "0");
+ 311   2              number(0);
+ 312   2              break;
+ 313   2          case 0x48:
+ 314   2              press(4, 3, "Enter");
+ 315   2              flag = FALSE;
+ 316   2              break;
+ 317   2          }
+ 318   1          return flag;
+ 319   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1193    ----
+   CONSTANT SIZE    =    729    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     22       7
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

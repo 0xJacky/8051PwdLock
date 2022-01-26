@@ -1,0 +1,33 @@
+C51 COMPILER V9.00   TIME                                                                  12/14/2021 15:45:16 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE TIME
+OBJECT MODULE PLACED IN time.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE time.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include "time.h"
+   2          
+   3          void time(uint ucMs) {
+   4   1              #define DELAYTIMES 239
+   5   1              byte ucCounter;
+   6   1              while (ucMs!=0) {
+   7   2                      for (ucCounter=0;ucCounter<DELAYTIMES;ucCounter++){};
+   8   2                      ucMs--;
+   9   2              }
+  10   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     18    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

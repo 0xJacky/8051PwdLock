@@ -1,0 +1,7 @@
+"STARTUP.obj",
+"main.obj",
+"keyscan.obj",
+"time.obj",
+"uart.obj",
+"lcd.obj" 
+TO "pwd-design" 

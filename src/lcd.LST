@@ -1,0 +1,128 @@
+C51 COMPILER V9.00   LCD                                                                   12/14/2021 15:45:16 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE LCD
+OBJECT MODULE PLACED IN lcd.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE lcd.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include "lcd.h"
+   2          #include<intrins.h>
+   3          #include<stdio.h>
+   4          #define uchar unsigned char
+   5          uchar xdata Lcd1602CmdPort _at_ 0xFFF0;
+   6          uchar xdata Lcd1602StatusPort _at_ 0xFFF1;
+   7          uchar xdata Lcd1602WdataPort _at_ 0xFFF2;
+   8          uchar xdata Lcd1602RdataPort _at_ 0xFFF3;
+   9          #define uchar unsigned char
+  10          #define BUSY 0x80
+  11          
+  12          void Putstr(uchar x, uchar y, uchar code *ptr)
+  13          {
+  14   1          uchar i, l = 0;
+  15   1          while (ptr[l] > 31)
+  16   1          {
+  17   2              l++;
+  18   2          };
+  19   1          for (i = 0; i < l; i++)
+  20   1          {
+  21   2              DispOneChar(x++, y, ptr[i]);
+  22   2      
+  23   2              if (x == 16)
+  24   2              {
+  25   3                  x = 0;
+  26   3                  y ^= 1;
+  27   3              }
+  28   2          }
+  29   1      }
+  30          
+  31          void PutDataStr(uchar x, uchar y, uchar *ptr)
+  32          {
+  33   1              uchar i, l = 0;
+  34   1          while (ptr[l] > 31)
+  35   1          {
+  36   2              l++;
+  37   2          };
+  38   1          for (i = 0; i < l; i++)
+  39   1          {
+  40   2              DispOneChar(x++, y, ptr[i]);
+  41   2      
+  42   2              if (x == 16)
+  43   2              {
+  44   3                  x = 0;
+  45   3                  y ^= 1;
+  46   3              }
+  47   2          }
+  48   1      }
+  49          
+  50          void Display(uchar dd)
+  51          {
+  52   1          uchar i, l;
+  53   1          for (i = 0; i < 16; i++)
+  54   1          {
+  55   2              DispOneChar(i, l, dd++);
+C51 COMPILER V9.00   LCD                                                                   12/14/2021 15:45:16 PAGE 2   
+
+  56   2              dd &= 0x7f;
+  57   2              if (dd < 32)
+  58   2                  dd = 32;
+  59   2          }
+  60   1      }
+  61          
+  62          void LocateXY(char posx, char posy)
+  63          {
+  64   1          uchar temp;
+  65   1          temp = posx & 0xf;
+  66   1          posy &= 0x1;
+  67   1          if (posy)
+  68   1              temp |= 0x40;
+  69   1          temp |= 0x80;
+  70   1          LcdWriteCommand(temp, 0);
+  71   1      }
+  72          
+  73          void DispOneChar(uchar x, uchar y, uchar Wdata)
+  74          {
+  75   1          LocateXY(x, y);
+  76   1          LcdWriteData(Wdata);
+  77   1      }
+  78          
+  79          void LcdReset(void)
+  80          {
+  81   1          time(400);
+  82   1          LcdWriteCommand(0x38, 0);
+  83   1          while (Lcd1602StatusPort & BUSY)
+  84   1              ;
+  85   1          LcdWriteCommand(0x08, 1);
+  86   1          LcdWriteCommand(0x06, 1);
+  87   1          LcdWriteCommand(0x0f, 1);
+  88   1          LcdWriteCommand(0x01, 1);
+  89   1      }
+  90          
+  91          void LcdWriteCommand(uchar CMD, uchar AttribC)
+  92          {
+  93   1          if (AttribC)
+  94   1              while (Lcd1602StatusPort & BUSY)
+  95   1                  ;
+  96   1          Lcd1602CmdPort = CMD;
+  97   1      }
+  98          
+  99          void LcdWriteData(char dataW)
+ 100          {
+ 101   1          while (Lcd1602StatusPort & BUSY);
+ 102   1          Lcd1602WdataPort = dataW;
+ 103   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    318    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      17
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
